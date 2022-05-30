@@ -1,0 +1,6 @@
+data/
+models/
+figs/
+
+.DS_Store
+__pycache__/
