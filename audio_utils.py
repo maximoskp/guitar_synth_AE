@@ -9,6 +9,26 @@ Created on Mon Nov 23 15:20:13 2020
 
 import numpy as np
 
+midi_fretboard = np.zeros( (6,25) ).astype(np.float32)
+midi_strings = np.array( [40,45,50,55,59,64] )[::-1]
+for i in range(6):
+    for j in range(25):
+        midi_fretboard[i,j] = midi_strings[i] + j
+
+freq_fretboard = np.zeros( (6,25) ).astype(np.float32)
+def noteToFreq(note):
+    a = 440 #frequency of A (coomon value is 440Hz)
+    return (a / 32) * (2 ** ((note - 9) / 12))
+
+for i in range(6):
+    for j in range(25):
+        freq_fretboard[i,j] = noteToFreq( midi_fretboard[i,j] )
+
+print('midi_fretboard')
+print(midi_fretboard)
+print('freq_fretboard')
+print(freq_fretboard)
+
 def make_noise( amp=0.5 , dur_secs=0.5 , sr=44100 ):
     return amp*( 1 - 2*np.random.random( int(dur_secs*sr) ) )
 

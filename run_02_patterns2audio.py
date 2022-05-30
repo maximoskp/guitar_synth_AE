@@ -60,17 +60,24 @@ for i in range(top_k):
             highest_fret = np.where( np.sum( p, axis=0 ) > 0 )[0][-1]
             while highest_fret < 24:
                 s = np.zeros(total_duration)
+                nnz_strings = 0
+                for string in range(6):
+                    if np.sum(p[string,:]) > 0:
+                        nnz_strings += 1
+                        fret = np.where( p[string,:] != 0 )[0][0]
+                        s += guitar_samples['firebrand'].get_random_sample( 6-string, fret, duration_samples=total_duration )
+                adsr = audio_utils.get_adsr_from_audio( s )
+                h = np.zeros(total_duration)
                 for string in range(6):
                     if np.sum(p[string,:]) > 0:
                         fret = np.where( p[string,:] != 0 )[0][0]
-                        s += guitar_samples['firebrand'].get_random_sample( 6-string, fret, duration_samples=total_duration )
+                        h += audio_utils.make_sawtooth_aliased_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
                 ii = 0
                 while ii<=samples2keep*segments2keep and ii+samples2keep <= s.size:
                     # print('rollable: ' + str(ii))
                     tmp_s = s[ii:ii+samples2keep]
-                    if np.max( np.abs( tmp_s ) ) > 0.05:
-                        tmp_s = tmp_s/np.max( np.abs( tmp_s ) )
-                    sample = {'audio': tmp_s.astype(np.float32), 'tab': p.astype(np.bool)}
+                    tmp_h = h[ii:ii+samples2keep]
+                    sample = {'guitar': tmp_s.astype(np.float32), 'synth': tmp_h.astype(np.float32), 'tab': p.astype(np.bool)}
                     dataset.append( sample )
                     ii += samplesstep
                 p = np.roll( p , [0,1] )
@@ -78,31 +85,38 @@ for i in range(top_k):
             # end while
         else:
             s = np.zeros(total_duration)
+            nnz_strings = 0
+            for string in range(6):
+                if np.sum(p[string,:]) > 0:
+                    nnz_strings += 1
+                    fret = np.where( p[string,:] != 0 )[0][0]
+                    s += guitar_samples['firebrand'].get_random_sample( string+1, fret, duration_samples=total_duration )
+            adsr = audio_utils.get_adsr_from_audio( s )
+            h = np.zeros(total_duration)
             for string in range(6):
                 if np.sum(p[string,:]) > 0:
                     fret = np.where( p[string,:] != 0 )[0][0]
-                    s += guitar_samples['firebrand'].get_random_sample( string+1, fret, duration_samples=total_duration )
+                    h += audio_utils.make_sawtooth_aliased_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
             ii = 0
             while ii<=samples2keep*segments2keep and ii+samples2keep <= s.size:
                 # print('non-rollable: ' + str(ii))
                 tmp_s = s[ii:ii+samples2keep]
-                if np.max( np.abs( tmp_s ) ) > 0.05:
-                    tmp_s = tmp_s/np.max( np.abs( tmp_s ) )
-                sample = {'audio': tmp_s.astype(np.float32), 'tab': p.astype(np.bool)}
+                tmp_h = h[ii:ii+samples2keep]
+                sample = {'guitar': tmp_s.astype(np.float32), 'synth': tmp_h.astype(np.float32), 'tab': p.astype(np.bool)}
                 dataset.append( sample )
                 ii += samplesstep
     else:
         print('empty tab')
     # add empty tab
     # print('empty-random')
-    sample = {'audio':  np.zeros(samples2keep).astype(np.float32), 'tab': np.zeros( (6,25) ).astype(np.bool)}
+    sample = {'guitar':  np.zeros(samples2keep).astype(np.float32), 'synth':  np.zeros(samples2keep).astype(np.float32), 'tab': np.zeros( (6,25) ).astype(np.bool)}
     dataset.append( sample )
     # add noises
-    sample = {'audio':  np.random.rand(samples2keep).astype(np.float32), 'tab': np.zeros( (6,25) ).astype(np.bool)}
+    sample = {'guitar':  np.random.rand(samples2keep).astype(np.float32), 'synth':  np.random.rand(samples2keep).astype(np.float32), 'tab': np.zeros( (6,25) ).astype(np.bool)}
     dataset.append( sample )
 # end for
 
 # %% 
 
-with open('data/guitar_audio_and_tabs.pickle', 'wb') as handle:
+with open('data/guitar_and_synth_audio.pickle', 'wb') as handle:
     pickle.dump(dataset, handle, protocol=pickle.HIGHEST_PROTOCOL)
