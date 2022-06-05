@@ -71,7 +71,8 @@ for i in range(top_k):
                 for string in range(6):
                     if np.sum(p[string,:]) > 0:
                         fret = np.where( p[string,:] != 0 )[0][0]
-                        h += audio_utils.make_sawtooth_aliased_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
+                        # h += audio_utils.make_sawtooth_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
+                        h += audio_utils.make_sine_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
                 ii = 0
                 while ii<=samples2keep*segments2keep and ii+samples2keep <= s.size:
                     # print('rollable: ' + str(ii))
@@ -96,7 +97,8 @@ for i in range(top_k):
             for string in range(6):
                 if np.sum(p[string,:]) > 0:
                     fret = np.where( p[string,:] != 0 )[0][0]
-                    h += audio_utils.make_sawtooth_aliased_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
+                    # h += audio_utils.make_sawtooth_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
+                    h += audio_utils.make_sine_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
             ii = 0
             while ii<=samples2keep*segments2keep and ii+samples2keep <= s.size:
                 # print('non-rollable: ' + str(ii))
