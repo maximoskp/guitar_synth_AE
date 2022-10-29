@@ -1,6 +1,7 @@
 data/
 models/
 figs/
+audios/
 
 .DS_Store
 __pycache__/

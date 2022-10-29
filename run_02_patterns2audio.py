@@ -40,7 +40,7 @@ sr = g.constants.sample_rate
 dataset = []
 
 # keep top_k
-top_k = 2000
+top_k = 1000
 # sample duration in samples
 total_duration = sr*2
 samples2keep = 2*sr
@@ -67,18 +67,20 @@ for i in range(top_k):
                         fret = np.where( p[string,:] != 0 )[0][0]
                         s += guitar_samples['firebrand'].get_random_sample( 6-string, fret, duration_samples=total_duration )
                 adsr = audio_utils.get_adsr_from_audio( s )
-                h = np.zeros(total_duration)
+                h_sine = np.zeros(total_duration)
+                h_saw = np.zeros(total_duration)
                 for string in range(6):
                     if np.sum(p[string,:]) > 0:
                         fret = np.where( p[string,:] != 0 )[0][0]
-                        # h += audio_utils.make_sawtooth_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
-                        h += audio_utils.make_sine_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
+                        h_saw += audio_utils.make_sawtooth_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
+                        h_sine += audio_utils.make_sine_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
                 ii = 0
                 while ii<=samples2keep*segments2keep and ii+samples2keep <= s.size:
                     # print('rollable: ' + str(ii))
                     tmp_s = s[ii:ii+samples2keep]
-                    tmp_h = h[ii:ii+samples2keep]
-                    sample = {'guitar': tmp_s.astype(np.float32), 'synth': tmp_h.astype(np.float32), 'tab': p.astype(np.bool)}
+                    tmp_h_sine = h_sine[ii:ii+samples2keep]
+                    tmp_h_saw = h_saw[ii:ii+samples2keep]
+                    sample = {'guitar': tmp_s.astype(np.float32), 'sine': tmp_h_sine.astype(np.float32), 'saw': tmp_h_saw.astype(np.float32), 'tab': p.astype(np.bool)}
                     dataset.append( sample )
                     ii += samplesstep
                 p = np.roll( p , [0,1] )
@@ -93,28 +95,30 @@ for i in range(top_k):
                     fret = np.where( p[string,:] != 0 )[0][0]
                     s += guitar_samples['firebrand'].get_random_sample( string+1, fret, duration_samples=total_duration )
             adsr = audio_utils.get_adsr_from_audio( s )
-            h = np.zeros(total_duration)
+            h_sine = np.zeros(total_duration)
+            h_saw = np.zeros(total_duration)
             for string in range(6):
                 if np.sum(p[string,:]) > 0:
                     fret = np.where( p[string,:] != 0 )[0][0]
-                    # h += audio_utils.make_sawtooth_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
-                    h += audio_utils.make_sine_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
+                    h_saw += audio_utils.make_sawtooth_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
+                    h_sine += audio_utils.make_sine_with_adsr( audio_utils.freq_fretboard[string, fret], amp=1/nnz_strings, adsr=adsr, sr=sr )
             ii = 0
             while ii<=samples2keep*segments2keep and ii+samples2keep <= s.size:
                 # print('non-rollable: ' + str(ii))
                 tmp_s = s[ii:ii+samples2keep]
-                tmp_h = h[ii:ii+samples2keep]
-                sample = {'guitar': tmp_s.astype(np.float32), 'synth': tmp_h.astype(np.float32), 'tab': p.astype(np.bool)}
+                tmp_h_sine = h_sine[ii:ii+samples2keep]
+                tmp_h_saw = h_saw[ii:ii+samples2keep]
+                sample = {'guitar': tmp_s.astype(np.float32), 'sine': tmp_h_sine.astype(np.float32), 'saw': tmp_h_saw.astype(np.float32), 'tab': p.astype(np.bool)}
                 dataset.append( sample )
                 ii += samplesstep
     else:
         print('empty tab')
     # add empty tab
     # print('empty-random')
-    sample = {'guitar':  np.zeros(samples2keep).astype(np.float32), 'synth':  np.zeros(samples2keep).astype(np.float32), 'tab': np.zeros( (6,25) ).astype(np.bool)}
+    sample = {'guitar':  np.zeros(samples2keep).astype(np.float32), 'sine':  np.zeros(samples2keep).astype(np.float32), 'saw':  np.zeros(samples2keep).astype(np.float32), 'tab': np.zeros( (6,25) ).astype(np.bool)}
     dataset.append( sample )
     # add noises
-    sample = {'guitar':  np.random.rand(samples2keep).astype(np.float32), 'synth':  np.random.rand(samples2keep).astype(np.float32), 'tab': np.zeros( (6,25) ).astype(np.bool)}
+    sample = {'guitar':  np.random.rand(samples2keep).astype(np.float32), 'sine':  np.random.rand(samples2keep).astype(np.float32), 'saw':  np.random.rand(samples2keep).astype(np.float32), 'tab': np.zeros( (6,25) ).astype(np.bool)}
     dataset.append( sample )
 # end for
 

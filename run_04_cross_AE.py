@@ -139,7 +139,7 @@ model.summary()
 
 import progressbar
 
-def train_model(model, guitar_model, synth_model, x, y, batch_size=128, n_epochs=50):
+def train_model(model, guitar_model, synth_model, x, y, batch_size=128, n_epochs=1000):
     for epoch in range(n_epochs):
         print('epoch: ', epoch)
         progress = 0.

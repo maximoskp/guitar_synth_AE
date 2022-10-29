@@ -12,14 +12,17 @@ with open('data/guitar_and_synth_audio.pickle', 'rb') as handle:
     audios = pickle.load(handle)
 
 # size in samples
-sz = 256
+# sz = 256
+# keep entire
+sz = 4096
 w = np.hanning( sz )
 
 # XY matrices
 # how many
 N = len(audios[0]['guitar'])//sz
 x = np.zeros( (N*len( audios ) , sz) ).astype(np.float32)
-y = np.zeros( (N*len( audios ) , sz) ).astype(np.float32)
+y_sine = np.zeros( (N*len( audios ) , sz) ).astype(np.float32)
+y_saw = np.zeros( (N*len( audios ) , sz) ).astype(np.float32)
 
 print('x.shape: ', x.shape)
 
@@ -30,7 +33,8 @@ for i, p in enumerate( audios ):
     ii = 0
     while ii + sz <= p['guitar'].size:
         x[row,:] = w*p['guitar'][ii:ii+sz].astype(np.float32)
-        y[row,:] = w*p['synth'][ii:ii+sz].astype(np.float32)
+        y_sine[row,:] = w*p['sine'][ii:ii+sz].astype(np.float32)
+        y_saw[row,:] = w*p['saw'][ii:ii+sz].astype(np.float32)
         row += 1
         ii += sz
 
@@ -38,5 +42,8 @@ for i, p in enumerate( audios ):
 with open('data/x.pickle', 'wb') as handle:
     pickle.dump(x, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-with open('data/y.pickle', 'wb') as handle:
-    pickle.dump(y, handle, protocol=pickle.HIGHEST_PROTOCOL)
+with open('data/y_sine.pickle', 'wb') as handle:
+    pickle.dump(y_sine, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+with open('data/y_saw.pickle', 'wb') as handle:
+    pickle.dump(y_saw, handle, protocol=pickle.HIGHEST_PROTOCOL)
